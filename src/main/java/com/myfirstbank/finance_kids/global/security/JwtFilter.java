@@ -35,19 +35,24 @@ public class JwtFilter extends OncePerRequestFilter {
 
         String authorization = request.getHeader(AUTHORIZATION);
 
-        if(authorization == null || !authorization.startsWith(BEARER)){
+        if(authorization == null || !authorization.startsWith(BEARER + " ")){
             logger.debug("Token is null");
             filterChain.doFilter(request, response);
-
             return;
         }
 
-        String token = authorization.split(" ")[1];
+        String token = authorization.substring(7);
 
-        if(jwtUtil.isExpired(token)){
-            logger.debug("Token is expired");
+        if (token.trim().isEmpty()) {
+            log.warn("JWT token is empty");
             filterChain.doFilter(request, response);
+            return;
+        }
 
+        if (jwtUtil.isExpired(token)) {
+            log.debug("Token is expired");
+            log.debug("Extracted JWT token: '{}'", token);
+            filterChain.doFilter(request, response);
             return;
         }
 
