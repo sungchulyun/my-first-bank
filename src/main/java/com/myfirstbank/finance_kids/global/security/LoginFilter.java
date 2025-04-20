@@ -1,5 +1,7 @@
 package com.myfirstbank.finance_kids.global.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myfirstbank.finance_kids.domain.user.record.CreateUserRequest;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,6 +11,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.io.IOException;
 
 public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -27,13 +31,21 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
-        String username = obtainUsername(request);
-        String password = obtainPassword(request);
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            CreateUserRequest loginRequest = objectMapper.readValue(request.getInputStream(), CreateUserRequest.class);
 
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username, password
-                , null);
+            String username = loginRequest.username();
+            String password = loginRequest.password();
 
-        return authenticationManager.authenticate(authToken);
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(username, password);
+
+            return authenticationManager.authenticate(authToken);
+
+        } catch (IOException e) {
+            throw new RuntimeException("로그인 요청 JSON 파싱 실패", e);
+        }
     }
 
     @Override
