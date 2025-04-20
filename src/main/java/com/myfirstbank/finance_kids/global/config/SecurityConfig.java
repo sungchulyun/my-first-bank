@@ -25,7 +25,9 @@ public class SecurityConfig {
     public static final String[] PUBLIC_URLS = {
             "/v3-api-docs/**",
             "/swagger-ui/**",
-            "/swagger-resources/**"
+            "/swagger-resources/**",
+            "/login",
+            "/api/v1/user/**"
     };
 
     private final AuthenticationConfiguration authenticationConfiguration;
@@ -49,7 +51,8 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers(PUBLIC_URLS).permitAll()
+                        .requestMatchers("/api/v1/test/**").hasRole("USER")
                         .anyRequest().authenticated())
 
                 .addFilterAt(new LoginFilter(authenticationManager(authenticationConfiguration), jwtUtil),
